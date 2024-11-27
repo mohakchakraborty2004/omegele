@@ -9,13 +9,13 @@ class userManager {
    private users: WebSocket[]
    private Nextusers : WebSocket[]
 
-   private WaitingUser : WebSocket | null
+ //  private WaitingUser : WebSocket | null
 
    constructor() {
     this.meetings = [];
     this.users = [];
     this.Nextusers = [];
-    this.WaitingUser = null
+   // this.WaitingUser = null
    }
 
    public addUser(socket : WebSocket) {
@@ -29,34 +29,35 @@ class userManager {
         this.Match(socket);
      } 
      else if (parsedMessage.type === "next"){
-
+       this.Match(socket)
+     } else if(parsedMessage.type === "leave") {
+       socket.close();
+       this.users =  this.users.filter(item => item !== socket);
+      
      }
      
    }
 
-   public UnMatch(socket : WebSocket){
-     // logic for exiting the room in User Class
-     
-
-     // probably add the user to waiting user 
-
-     // make the waiting user as queue 
-
-   }
+ 
 
 
    public Match( socket : WebSocket){
     // if queue check whether queue is not empty
-    if(this.WaitingUser){
-        // if queue , grab the 1st user from it 
-        const user = new User(this.WaitingUser, socket);
-        // after matching pop it from queue
-        this.meetings.push(user);
-        this.WaitingUser = null; 
+    if(this.Nextusers.length != 0){
+        // if queue , grab the 1st user from it (done)
+        const FirstUserInWaiting  = this.Nextusers.shift();
+
+        if (FirstUserInWaiting){
+          const user = new User(FirstUserInWaiting, socket);
+          this.meetings.push(user);
+        }
+        // after matching pop it from queue (done)
+       // this.WaitingUser = null; 
     }
     else {
         // add the user here if he's the first one , but he will probably be not the first one 
-        this.WaitingUser = socket;
+       // add a check logic if the socket exists in the queue already.
+        this.Nextusers.push(socket)
     }
    }
 }
