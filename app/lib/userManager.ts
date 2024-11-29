@@ -26,12 +26,22 @@ class userManager {
 
    public addUser(socket : WebSocket) {
      this.users.push(socket);
+     console.log("user added");
    }
 
    public handleMessage (socket : WebSocket, message : string){
      const parsedMessage : msg = JSON.parse(message);
 
+     const activeUser = this.meetings.find(
+      (meeting) => meeting.isParticipant(socket)
+     )
+
+     if(activeUser){
+      activeUser.handleRTC(socket, message)
+     }
+
      if(parsedMessage.action === "match"){
+      console.log("match accessed")
         this.Match(socket, message);
      } 
      else if (parsedMessage.action === "next"){
@@ -58,12 +68,15 @@ class userManager {
           // user.handleRTC(FirstUserInWaiting,socket, message );
           this.meetings.push(user);
         }
+
+        console.log("users matched")
         // after matching pop it from queue (done)
        // this.WaitingUser = null; 
     }
     else {
        // add the user here if he's the first one , but he will probably be not the first one (done)
        // add a check logic if the socket exists in the queue already.
+       console.log("first user")
         this.Nextusers.push(socket)
     }
    }
