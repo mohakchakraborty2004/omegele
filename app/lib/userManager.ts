@@ -1,3 +1,5 @@
+"use server";
+
 import { WebSocket } from "ws";
 import User from "./user";
 import { json } from "stream/consumers";

@@ -4,7 +4,7 @@ import Image from "next/image"
   
     return(
         <>
-        <div className="flex justify-center items-center p-5">
+        <div className="flex justify-center items-center pt-9 ">
             <Image src={"/logoFP.png"} alt="logo"
             height={200}
             width={200}

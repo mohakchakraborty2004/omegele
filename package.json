@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "server" : "node app/lib/websocket.js"
   },
   "dependencies": {
     "@types/ws": "^8.5.13",
