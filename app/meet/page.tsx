@@ -15,6 +15,7 @@ export default function Meet(){
     useEffect(() =>{
         const pc = new RTCPeerConnection();
         setPc(pc);
+        console.log("pc connected");
     }, [])
 
     useEffect(()=> {
@@ -34,7 +35,7 @@ export default function Meet(){
 
                 console.log("offer recieved")
 
-               await PC!.setRemoteDescription(parsedMessage.sdp);
+               await PC!.setRemoteDescription(parsedMessage);
                const answer = await PC!.createAnswer();
 
                 console.log(answer)
@@ -50,34 +51,57 @@ export default function Meet(){
 
             if(parsedMessage.type === "answer"){
                 console.log("answer recieved")
-                await PC!.setRemoteDescription(parsedMessage.sdp);
+                await PC!.setRemoteDescription(parsedMessage);
             }
         }
       }
     }, [socket, connected])
 
+
+
     const handleMessage = async() => {
-       if(!socket || !connected){
+       if(!socket || !PC){
         console.log("no socket")
        }
 
        console.log("user connected")
 
 
-      if(socket){
-        PC!.onnegotiationneeded = async() => {
-            const offer = await PC!.createOffer();
-            await PC!.setLocalDescription(offer);
+      if(socket && PC){
+        console.log("1111")
+        // PC.onnegotiationneeded = async() => {
+        //     console.log("on negotiation");
+        //     const offer = await PC!.createOffer();
+        //     await PC.setLocalDescription(offer);
+
+        //     console.log(offer)
     
-            const type = PC!.localDescription?.type 
-            const sdp = PC!.localDescription?.sdp
+        //     const type = PC.localDescription?.type 
+        //     const sdp = PC.localDescription?.sdp
+    
+        //     socket.send(JSON.stringify({
+        //         type : type,
+        //         sdp : sdp
+        //     }))
+    
+        //   }
+
+
+
+            const offer = await PC.createOffer();
+            await PC.setLocalDescription(offer);
+
+            console.log(offer)
+    
+            const type = PC.localDescription?.type 
+            const sdp = PC.localDescription?.sdp
     
             socket.send(JSON.stringify({
                 type : type,
                 sdp : sdp
             }))
-    
-          }
+
+        
       }
 
    
