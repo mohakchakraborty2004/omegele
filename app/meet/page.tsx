@@ -7,7 +7,15 @@ import useSocket from "../hooks/useSocket";
 export default function Meet(){
     const [next, setNext] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
+    const [PC , setPc] = useState<RTCPeerConnection>()
     const {socket, connected} = useSocket();
+   
+    // setPc(PC);
+
+    useEffect(() =>{
+        const pc = new RTCPeerConnection();
+        setPc(pc);
+    }, [])
 
     useEffect(()=> {
      if(!socket || !connected){
@@ -19,29 +27,60 @@ export default function Meet(){
             action: "match",
         }))
 
-        socket.onmessage = (event) => {
+        socket.onmessage =  async(event) => {
             const parsedMessage = JSON.parse(event.data);
 
             if(parsedMessage.type === "offer"){
-                console.log("parsed message recieved");
+
+                console.log("offer recieved")
+
+               await PC!.setRemoteDescription(parsedMessage.sdp);
+               const answer = await PC!.createAnswer();
+
+                console.log(answer)
+
+               await PC!.setLocalDescription(answer);
+
+               socket.send(JSON.stringify({
+                type: PC!.localDescription?.type,
+                sdp : PC!.localDescription?.sdp
+               }))
+
+            }
+
+            if(parsedMessage.type === "answer"){
+                console.log("answer recieved")
+                await PC!.setRemoteDescription(parsedMessage.sdp);
             }
         }
       }
-    }, [socket])
+    }, [socket, connected])
 
-    const handleMessage = () => {
+    const handleMessage = async() => {
        if(!socket || !connected){
         console.log("no socket")
        }
 
        console.log("user connected")
 
+
       if(socket){
-        socket.send(JSON.stringify({
-            type : "offer",
-            sdp : "SDP_INFO"
-        }))
+        PC!.onnegotiationneeded = async() => {
+            const offer = await PC!.createOffer();
+            await PC!.setLocalDescription(offer);
+    
+            const type = PC!.localDescription?.type 
+            const sdp = PC!.localDescription?.sdp
+    
+            socket.send(JSON.stringify({
+                type : type,
+                sdp : sdp
+            }))
+    
+          }
       }
+
+   
     }
 
     return (
