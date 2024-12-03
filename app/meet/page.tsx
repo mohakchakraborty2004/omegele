@@ -53,6 +53,11 @@ export default function Meet(){
                 console.log("answer recieved")
                 await PC!.setRemoteDescription(parsedMessage);
             }
+
+            if (parsedMessage.type === "iceCandidate"){
+                const iceCandidate = parsedMessage.iceCandidate;
+                await PC?.addIceCandidate(iceCandidate);
+            }
         }
       }
     }, [socket, connected])
@@ -100,6 +105,11 @@ export default function Meet(){
                 type : type,
                 sdp : sdp
             }))
+
+            PC.onicecandidate = (event) => {
+                console.log("these are cands : ",event.candidate);
+                socket.send(JSON.stringify({type : "iceCandidate", candidate : event.candidate}))
+            }
 
         
       }
