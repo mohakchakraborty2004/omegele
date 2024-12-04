@@ -5,8 +5,8 @@ import useSocket from "../hooks/useSocket";
 
 
 export default function Meet(){
-    const [next, setNext] = useState<boolean>(false)
-    const [loading, setLoading] = useState<boolean>(false)
+    const [str, setStr] = useState<any>()
+    const [loading, setLoading] = useState<boolean>(true)
     const [PC , setPc] = useState<RTCPeerConnection>()
     const {socket, connected} = useSocket();
    
@@ -17,26 +17,7 @@ export default function Meet(){
         setPc(pc);
         console.log("pc connected");
 
-        // if(!socket || !PC){
-        //     console.log("error in first use effect");
-        //     return
-        // }
 
-        // PC.onicecandidate = (event) => {
-        //     console.log("these are cands : ",event.candidate);
-        //     const candidate = event.candidate
-        //     socket.send(JSON.stringify({type : "candidate", candidate}))
-        // }
-
-        // PC.ontrack = (event) => {
-        //     console.log("vid recieved");
-        //     const remoteVideo = document.getElementById("vid") as HTMLVideoElement;
-        //     if(remoteVideo){
-        //         console.log("vid");
-        //         remoteVideo.srcObject = event.streams[0];
-        //     }
-
-          //  }
     }, [])
 
     useEffect(()=> {
@@ -48,9 +29,27 @@ export default function Meet(){
         socket.send(JSON.stringify({
             action: "match",
         }))
+  
+        PC!.ontrack = (event) => {
+            console.log("vid recieved");
+            const remoteVideo = document.getElementById("vid") as HTMLVideoElement;
+            if(remoteVideo){
+                console.log("vid", event.streams[0]);
+                //@ts-ignore
+                remoteVideo.srcObject = event.streams[0]; 
+            }
+
+            }
+
+
 
         socket.onmessage =  async(event) => {
             const parsedMessage = JSON.parse(event.data);
+
+            if(parsedMessage.type === "matched"){
+                setLoading(false)
+                // sending offer logic here
+            }
 
             if(parsedMessage.type === "offer"){
 
@@ -102,7 +101,13 @@ export default function Meet(){
        PC.onicecandidate = (event) => {
         console.log("these are cands : ",event.candidate);
         const candidate = event.candidate
-        socket.send(JSON.stringify({type : "candidate", candidate}))
+        if(candidate){
+            socket.send(JSON.stringify({type : "candidate", candidate}))
+        }
+        else {
+            console.log("all ice candidates sent")
+        }
+       
     }
 
 
@@ -126,7 +131,7 @@ export default function Meet(){
 
           
 
-          const stream =  await navigator.mediaDevices.getUserMedia({video : true, audio : false})
+          const stream =  await window.navigator.mediaDevices.getUserMedia({video : true, audio : false})
           const LocalVid = document.getElementById("Localvid") as HTMLVideoElement;
             if(stream && LocalVid){
                 console.log("stream sent")
@@ -134,20 +139,7 @@ export default function Meet(){
                 LocalVid.srcObject = new MediaStream(stream)
             }
 
-            PC.ontrack = (event) => {
-            console.log("vid recieved");
-            const remoteVideo = document.getElementById("vid") as HTMLVideoElement;
-            if(remoteVideo){
-                console.log("vid");
-                //@ts-ignore
-                remoteVideo.srcObject = new MediaStream(event.streams[0]); 
-            }
-
-            }
-
         
-      
-
    
     }
 

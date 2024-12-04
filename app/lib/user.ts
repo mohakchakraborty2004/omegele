@@ -19,8 +19,17 @@ class User {
         this.User2 = _user2
         this.message = _message
 
+
         console.log("users recieved in user.ts");
 
+        
+        this.User1.send(JSON.stringify({
+          type: "matched"
+        }))
+
+        this.User2.send(JSON.stringify({
+          type: "matched"
+        }))
        // this.handleRTC(this.User1, this.User2, this.message);
      //  this.msgBinder();
     }
