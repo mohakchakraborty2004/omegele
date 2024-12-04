@@ -16,6 +16,27 @@ export default function Meet(){
         const pc = new RTCPeerConnection();
         setPc(pc);
         console.log("pc connected");
+
+        // if(!socket || !PC){
+        //     console.log("error in first use effect");
+        //     return
+        // }
+
+        // PC.onicecandidate = (event) => {
+        //     console.log("these are cands : ",event.candidate);
+        //     const candidate = event.candidate
+        //     socket.send(JSON.stringify({type : "candidate", candidate}))
+        // }
+
+        // PC.ontrack = (event) => {
+        //     console.log("vid recieved");
+        //     const remoteVideo = document.getElementById("vid") as HTMLVideoElement;
+        //     if(remoteVideo){
+        //         console.log("vid");
+        //         remoteVideo.srcObject = event.streams[0];
+        //     }
+
+          //  }
     }, [])
 
     useEffect(()=> {
@@ -54,9 +75,15 @@ export default function Meet(){
                 await PC!.setRemoteDescription(parsedMessage);
             }
 
-            if (parsedMessage.type === "iceCandidate"){
-                const iceCandidate = parsedMessage.iceCandidate;
-                await PC?.addIceCandidate(iceCandidate);
+            if (parsedMessage.type === "candidate"){
+                if(parsedMessage.candidate){
+                    const iceCandidate = parsedMessage.iceCandidate;
+                    await PC?.addIceCandidate(iceCandidate);
+                    console.log("candidate recieved")
+                }
+              else{
+                console.log("recieved all the candidates");
+              }
             }
         }
       }
@@ -67,33 +94,22 @@ export default function Meet(){
     const handleMessage = async() => {
        if(!socket || !PC){
         console.log("no socket")
+        return
        }
 
        console.log("user connected")
 
-
-      if(socket && PC){
-        console.log("1111")
-        // PC.onnegotiationneeded = async() => {
-        //     console.log("on negotiation");
-        //     const offer = await PC!.createOffer();
-        //     await PC.setLocalDescription(offer);
-
-        //     console.log(offer)
-    
-        //     const type = PC.localDescription?.type 
-        //     const sdp = PC.localDescription?.sdp
-    
-        //     socket.send(JSON.stringify({
-        //         type : type,
-        //         sdp : sdp
-        //     }))
-    
-        //   }
+       PC.onicecandidate = (event) => {
+        console.log("these are cands : ",event.candidate);
+        const candidate = event.candidate
+        socket.send(JSON.stringify({type : "candidate", candidate}))
+    }
 
 
 
-            const offer = await PC.createOffer();
+        PC.onnegotiationneeded = async() => {
+            console.log("on negotiation");
+            const offer = await PC!.createOffer();
             await PC.setLocalDescription(offer);
 
             console.log(offer)
@@ -105,20 +121,46 @@ export default function Meet(){
                 type : type,
                 sdp : sdp
             }))
+    
+          }
 
-            PC.onicecandidate = (event) => {
-                console.log("these are cands : ",event.candidate);
-                socket.send(JSON.stringify({type : "iceCandidate", candidate : event.candidate}))
+          
+
+          const stream =  await navigator.mediaDevices.getUserMedia({video : true, audio : false})
+          const LocalVid = document.getElementById("Localvid") as HTMLVideoElement;
+            if(stream && LocalVid){
+                console.log("stream sent")
+                PC.addTrack(stream.getVideoTracks()[0]);
+                LocalVid.srcObject = new MediaStream(stream)
+            }
+
+            PC.ontrack = (event) => {
+            console.log("vid recieved");
+            const remoteVideo = document.getElementById("vid") as HTMLVideoElement;
+            if(remoteVideo){
+                console.log("vid");
+                //@ts-ignore
+                remoteVideo.srcObject = new MediaStream(event.streams[0]); 
+            }
+
             }
 
         
-      }
+      
 
    
     }
 
     return (
         <>
+
+        <video id="vid"  autoPlay
+        playsInline
+        style={{ width: "50%", height: "auto", background: "black" }}></video>
+
+<video id="Localvid"  autoPlay
+        playsInline
+        style={{ width: "50%", height: "auto", background: "black" }}></video>
 
         <button onClick={handleMessage}> 
             join
