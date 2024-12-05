@@ -16,11 +16,14 @@ export default function Meet(){
         const pc = new RTCPeerConnection();
 
         pc.ontrack = (event) => {
-            console.log("Received remote track.");
+            console.log("Received remote track:", event);
             const remoteVideo = document.getElementById("vid") as HTMLVideoElement;
-            if (remoteVideo) {
-                console.log("this is on track streams : ", event.streams)
-                remoteVideo.srcObject = event.streams[0]
+            if (event.streams && event.streams.length > 0) {
+                if (remoteVideo) {
+                    remoteVideo.srcObject = event.streams[0];
+                }
+            } else {
+                console.log("No streams available in ontrack event.");
             }
         };
 
@@ -147,11 +150,12 @@ export default function Meet(){
           const LocalVid = document.getElementById("Localvid") as HTMLVideoElement;
             if(stream && LocalVid){
                 console.log("stream sent")
-                PC.addTrack(stream.getVideoTracks()[0]);
                 LocalVid.srcObject = stream
+                stream.getTracks().forEach(track => {
+                    PC.addTrack(track, stream);
+                    console.log("Track added:", track);
+                });
             }
-
-        
    
     }
 
